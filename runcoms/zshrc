@@ -1,8 +1,44 @@
 # Run at the start of an interactive session.
 
+command_exists () {
+  type "$1" &> /dev/null
+}
+
+if [[ $on_mac = 1 ]]; then
+  path+=(
+    /Applications/Sublime\ Text.app/Contents/SharedSupport/bin
+    /Library/TeX/texbin
+  )
+fi
+
+# This relies on `go` being available on the path, which is done on MacOS using
+# the `path_helper` program, which is called in /etc/zprofile. This is run
+# after ~/.zshenv, so I must do this here.
+if command_exists go; then
+  path+="$(go env GOPATH)/bin"
+fi
+
 # Source Prezto.
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
   source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
 fi
 
+
 # Customize to your needs...
+
+
+# Common paths
+export dl=~/Downloads
+export dt=~/Desktop
+export proj=~/projects
+export zp=~/.zprezto
+
+# When using PySpark shell, use ipython instead of python shell
+export PYSPARK_DRIVER_PYTHON=ipython
+# Predictable location of SSH authentication socket.
+export PERM_SSH_AUTH_SOCK=~/.ssh/ssh-auth-sock
+# https://github.com/zsh-users/zsh-autosuggestions/#disabling-suggestion-for-large-buffers
+export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE="20"
+
+# Disable zsh autocorrection.
+unsetopt correct
