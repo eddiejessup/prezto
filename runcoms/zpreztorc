@@ -21,23 +21,39 @@ zstyle ':prezto:*:*' color 'yes'
 
 # Set the Prezto modules to load.
 # The order matters.
-zstyle ':prezto:load' pmodule \
-  'environment' \
-  'terminal' \
-  'editor' \
-  'history' \
-  'directory' \
-  'spectrum' \
-  'utility' \
-  'completion' \
-  'prompt'
+# The following modules must be loaded in this order:
+# - syntax-highlighting
+# - history-substring-search
+# - autosuggestions
+# - prompt
+prez_modules=(
+  # Defaults, in default order.
+  environment
+  terminal
+  editor
+  history
+  directory
+  spectrum
+  utility
+  completion
+  # Non-defaults.
+  git
+  python
+  osx
+  syntax-highlighting
+  history-substring-search
+  autosuggestions
+  # Prompt is a default, but should go last.
+  prompt
+)
+zstyle ':prezto:load' pmodule ${prez_modules[@]}
 
 #
 # Autosuggestions
 #
 
 # Set the query found color.
-# zstyle ':prezto:module:autosuggestions:color' found ''
+zstyle ':prezto:module:autosuggestions:color' found "fg=242"
 
 #
 # Completions
@@ -58,7 +74,7 @@ zstyle ':prezto:module:editor' key-bindings 'emacs'
 # zstyle ':prezto:module:editor' dot-expansion 'yes'
 
 # Allow the zsh prompt context to be shown.
-#zstyle ':prezto:module:editor' ps-context 'yes'
+# zstyle ':prezto:module:editor' ps-context 'yes'
 
 #
 # Git
@@ -95,13 +111,6 @@ zstyle ':prezto:module:editor' key-bindings 'emacs'
 # zstyle ':prezto:module:osx:man' dash-keyword 'manpages'
 
 #
-# Pacman
-#
-
-# Set the Pacman frontend.
-# zstyle ':prezto:module:pacman' frontend 'yaourt'
-
-#
 # Prompt
 #
 
@@ -130,23 +139,6 @@ zstyle ':prezto:module:prompt' theme 'pure'
 # zstyle ':prezto:module:python:virtualenv' initialize 'yes'
 
 #
-# Ruby
-#
-
-# Auto switch the Ruby version on directory change.
-# zstyle ':prezto:module:ruby:chruby' auto-switch 'yes'
-
-#
-# Screen
-#
-
-# Auto start a session when Zsh is launched in a local terminal.
-# zstyle ':prezto:module:screen:auto-start' local 'yes'
-
-# Auto start a session when Zsh is launched in a SSH connection.
-# zstyle ':prezto:module:screen:auto-start' remote 'yes'
-
-#
 # SSH
 #
 
@@ -159,13 +151,15 @@ zstyle ':prezto:module:prompt' theme 'pure'
 
 # Set syntax highlighters.
 # By default, only the main highlighter is enabled.
-# zstyle ':prezto:module:syntax-highlighting' highlighters \
-#   'main' \
-#   'brackets' \
-#   'pattern' \
-#   'line' \
-#   'cursor' \
-#   'root'
+prez_highlighters=(
+  main
+  brackets
+  pattern
+  line
+  cursor
+  root
+)
+zstyle ':prezto:module:syntax-highlighting' highlighters ${prez_highlighters[@]}
 #
 # Set syntax highlighting styles.
 # zstyle ':prezto:module:syntax-highlighting' styles \
@@ -182,13 +176,13 @@ zstyle ':prezto:module:prompt' theme 'pure'
 #
 
 # Auto set the tab and window titles.
-# zstyle ':prezto:module:terminal' auto-title 'yes'
+zstyle ':prezto:module:terminal' auto-title 'no'
 
 # Set the window title format.
 # zstyle ':prezto:module:terminal:window-title' format '%n@%m: %s'
 
 # Set the tab title format.
-# zstyle ':prezto:module:terminal:tab-title' format '%m: %s'
+# zstyle ':prezto:module:terminal:tab-title' format '%m: haha %s'
 
 # Set the terminal multiplexer title format.
 # zstyle ':prezto:module:terminal:multiplexer-title' format '%s'

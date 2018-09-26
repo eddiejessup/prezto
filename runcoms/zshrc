@@ -1,3 +1,5 @@
+zmodload zsh/zprof
+
 # Run at the start of an interactive session.
 
 if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zsupport.sh" ]]; then
@@ -225,6 +227,12 @@ fi
 # I don't know whence this alias comes, but I don't want it, I want my function
 # version.
 unalias e
+
+# Unalias some things from the git plugin that clash with my customizations.
+# (Aliases take priority over functions when looking up commands.)
+unalias gs
+unalias gd
+unalias g
 
 def_env_vars
 def_real_aliases
