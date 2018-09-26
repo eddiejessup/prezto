@@ -1,8 +1,8 @@
 # Run at the start of an interactive session.
 
-command_exists () {
-  type "$1" &> /dev/null
-}
+if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zsupport.sh" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zprezto/runcoms/zsupport.sh"
+fi
 
 if [[ $on_mac = 1 ]]; then
   path+=(
@@ -19,26 +19,214 @@ if command_exists go; then
 fi
 
 # Source Prezto.
-if [[ -s "${ZDOTDIR:-$HOME}/.zprezto/init.zsh" ]]; then
-  source "${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+PREZTO_INIT_PATH="${ZDOTDIR:-$HOME}/.zprezto/init.zsh"
+if [[ -s $PREZTO_INIT_PATH ]]; then
+  source $PREZTO_INIT_PATH
 fi
 
 
 # Customize to your needs...
 
 
-# Common paths
-export dl=~/Downloads
-export dt=~/Desktop
-export proj=~/projects
-export zp=~/.zprezto
-
-# When using PySpark shell, use ipython instead of python shell
-export PYSPARK_DRIVER_PYTHON=ipython
-# Predictable location of SSH authentication socket.
-export PERM_SSH_AUTH_SOCK=~/.ssh/ssh-auth-sock
-# https://github.com/zsh-users/zsh-autosuggestions/#disabling-suggestion-for-large-buffers
-export ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE="20"
-
 # Disable zsh autocorrection.
 unsetopt correct
+
+# Refresh virtual environment (deactivate then activate).
+# (Used to refresh path lookups, for example to use the virtual env's ipython
+# after it's installed.)
+function rvenv () {
+    if [[ -v VIRTUAL_ENV ]]; then
+        env_name=$(basename ${VIRTUAL_ENV})
+        echo "Refreshing virtualenv '${env_name}'"
+        deactivate
+        workon $env_name
+    else
+        echo "No virtalenv found (VIRTUALENV not set), doing nothing"
+    fi
+}
+
+function set_proxy () {
+    # Apparently some programs inspect the uppercase versions.
+    # Source: https://wiki.archlinux.org/index.php/proxy_settings
+    export http_proxy="http://$1"
+    export HTTP_PROXY=$http_proxy
+    export https_proxy="http://$1"
+    export HTTPS_PROXY=$https_proxy
+}
+function unset_proxy () {
+    unset http_proxy HTTP_PROXY
+    unset https_proxy HTTPS_PROXY
+}
+
+# Use a predictable location for SSH authentication socket.
+export PERM_SSH_AUTH_SOCK=~/.ssh/ssh-auth-sock
+# If SSH_AUTH_SOCK is set, but not to our predictable location.
+# TODO: Clean up ugly first check when I can assume zsh >=5.3: https://stackoverflow.com/a/42655305.
+if [ -n "${SSH_AUTH_SOCK+1}" ] && [[ $SSH_AUTH_SOCK != $PERM_SSH_AUTH_SOCK ]]; then
+    # echo "SSH authentication socket location is set to volatile location: $SSH_AUTH_SOCK"
+    # Remove the existing symbolic link in the predictable location.
+    rm -f $PERM_SSH_AUTH_SOCK
+    # Make a new symbolic link, pointing from the predictable location to the
+    # new volatile location.
+    ln -sf $SSH_AUTH_SOCK $PERM_SSH_AUTH_SOCK
+    # echo "Setting location to predictable location: $PERM_SSH_AUTH_SOCK"
+    # Set the socket location to the predictable location.
+    export SSH_AUTH_SOCK=$PERM_SSH_AUTH_SOCK
+fi
+
+function mnt () {
+    # Unmount directory in case it's already mounted, ignoring the error output
+    # if it isn't.
+    umount $2 2> /dev/null
+    # `follow_symlinks` to be able to access, for example, remote NFS mounts.
+    # `reconnect` to survive disconnections: https://serverfault.com/a/6849.
+    # `Server*` options to make IO errors happen fast, rather than hanging for
+    # too long: https://serverfault.com/a/639735.
+    sshfs -o follow_symlinks,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 $1 $2
+}
+
+real_aliases=(
+)
+
+global_aliases=(
+  V "|& less"
+  G "|& egrep --color"
+  L "|& wc -l | sed 's/^\ *//'"
+
+  H  "|& head"
+  T  "|& tail"
+  H1 "H -n 1"
+  T1 "T -n 1"
+
+  ZF '*(.L0)'     # zero-length regular files
+  ZD '*(/L0)'     # zero-length directories
+
+  AE '{,.}*'      # all files, including dot files
+  AF '**/*(.)'    # all regular files
+  AD '**/*(/)'    # all directories
+  AS '**/*(@)'    # all symlinks
+
+  OF '*(.om[-1])' # oldest regular file
+  OD '*(/om[-1])' # oldest directory
+  OS '*(@om[-1])' # oldest symlink
+
+  NF '*(.om[1])'  # newest regular file
+  ND '*(/om[1])'  # newest directory
+  NS '*(@om[1])'  # newest symlink
+)
+
+funs=(
+  d "pushd"
+  \- "popd"
+  ds "dirs -l"
+
+  l "ls -GFAtr --color"
+  la "ls -AF --color"
+  ll "l -l"
+  l1 "l -1"
+  lh "l -H"
+  lr "l -R"
+  lk "la -l"
+
+  sl "ln -sf"
+  md "mkdir -p"
+
+  gi "g -i"
+  tf "tail -F"
+
+  e "$EDITOR_ASYNC"
+  ee "e . &"
+  c "cat"
+  tm "tmux"
+  tma "tmux a"
+  wl "wc -l"
+  chux "chmod u+x"
+  rd "rmdir"
+  l "ls"
+  k "echo"
+  ex "export"
+  us "unset"
+
+  # Python.
+  py "python"
+  ipy "ipython"
+  wo "workon"
+  de "deactivate"
+  nb "jupyter notebook --ip=\* --port=8080"
+  pi "pip install"
+  pl "pip list"
+
+  # Mac.
+  oo "open ."
+  tr "trash"
+
+  enc "gpg --encrypt --recipient $me"
+  dec "gpg --decrypt"
+
+  # Git.
+  # Make prezto's git module more like oh-my-zsh's git plugin.
+  g "git"
+  gs "gws" # status
+  gst "gwS" # status
+  gd "gwd" # diff
+  gdca "gid" # diff --cached
+  ga "gia" # add
+  grv "gRl" # remote -v
+  gcl "gfc" # clone
+  gsta "git stash"
+  gig "e .gitignore"
+  grm "git rm"
+  gmv "git mv"
+  gra "git remote add"
+  gin "git init"
+  grh "git reset HEAD"
+  gfrp "gfr && gp"
+  gclazy 'gc -m"Update"'
+  undo_last_commit "git reset HEAD~"
+
+  # Configuration.
+  sshconfig "e ~/.ssh/config"
+  zc "e ~/.zshrc"
+  zpc "e ~/.zpreztorc"
+  zr "source ~/.zshrc"
+
+  # Utilities
+  which_programs_which_ports "netstat -tulpn"
+  resolve_url "nslookup"
+
+  # Convert a date written as 'YYYY-MM-DD' to a UNIX epoch.
+  # (The number of seconds since 1970-01-01).
+  to_epoch "date -j -f %Y-%m-%d $1 +%s"
+  # Convert in the other direction.
+  from_epoch "date -r $1 +%Y-%m-%d"
+)
+
+env_vars=(
+  # Common paths
+  dl "$HOME/Downloads"
+  dt "$HOME/Desktop"
+  proj "$HOME/projects"
+  zp "$HOME/.zprezto"
+
+  # When using PySpark shell, use ipython instead of python shell
+  PYSPARK_DRIVER_PYTHON "ipython"
+  # https://github.com/zsh-users/zsh-autosuggestions/#disabling-suggestion-for-large-buffers
+  ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE "20"
+
+  # Identity.
+  mn "Elliot Marsden"
+  me "elliot.marsden@gmail.com"
+)
+
+if [[ -s "${ZDOTDIR:-$HOME}/.zshrc.local" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zshrc.local"
+fi
+
+# I don't know whence this alias comes, but I don't want it, I want my function
+# version.
+unalias e
+
+def_env_vars
+def_real_aliases
+def_global_aliases
+def_funs
