@@ -137,6 +137,7 @@ funs=(
   tf "tail -F"
 
   e "$EDITOR_ASYNC"
+  v "less"
   ee "e . &"
   c "cat"
   tm "tmux"
