@@ -47,19 +47,6 @@ function rvenv () {
     fi
 }
 
-function set_proxy () {
-    # Apparently some programs inspect the uppercase versions.
-    # Source: https://wiki.archlinux.org/index.php/proxy_settings
-    export http_proxy="http://$1"
-    export HTTP_PROXY=$http_proxy
-    export https_proxy="http://$1"
-    export HTTPS_PROXY=$https_proxy
-}
-function unset_proxy () {
-    unset http_proxy HTTP_PROXY
-    unset https_proxy HTTPS_PROXY
-}
-
 # Use a predictable location for SSH authentication socket.
 export PERM_SSH_AUTH_SOCK=~/.ssh/ssh-auth-sock
 # If SSH_AUTH_SOCK is set, but not to our predictable location.
@@ -221,10 +208,6 @@ env_vars=(
   me "elliot.marsden@gmail.com"
 )
 
-if [[ -s "${ZDOTDIR:-$HOME}/.zshrc.local" ]]; then
-  source "${ZDOTDIR:-$HOME}/.zshrc.local"
-fi
-
 # I don't know whence this alias comes, but I don't want it, I want my function
 # version.
 unalias e
@@ -234,6 +217,10 @@ unalias e
 unalias gs
 unalias gd
 unalias g
+
+if [[ -s "${ZDOTDIR:-$HOME}/.zshrc.local" ]]; then
+  source "${ZDOTDIR:-$HOME}/.zshrc.local"
+fi
 
 def_env_vars
 def_real_aliases
