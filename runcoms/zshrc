@@ -74,8 +74,10 @@ function mnt () {
     sshfs -o follow_symlinks,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 $1 $2
 }
 
-real_aliases=(
-)
+# HeX
+function hexpdf () {
+  stack exec hex -- $1 && dvipdf out.dvi && open out.pdf
+}
 
 global_aliases=(
   V "|& less"
@@ -102,15 +104,26 @@ global_aliases=(
   NF '*(.om[1])'  # newest regular file
   ND '*(/om[1])'  # newest directory
   NS '*(@om[1])'  # newest symlink
+
+  v "less"
+  wl "wc -l"
+
+  dl "$HOME/Downloads"
+  dt "$HOME/Desktop"
+  proj "$HOME/projects"
+  zp "$HOME/.zprezto"
+  # Identity.
+  mn "Elliot Marsden"
+  me "elliot.marsden@gmail.com"
 )
 
-funs=(
+real_aliases=(
   d "pushd"
-  \- "popd"
+  # See functions for 'popd' alias.
   ds "dirs -l"
 
-  l "ls -GFAtr --color"
-  la "ls -AF --color"
+  l "ls -GFAtr"
+  la "ls -GAF"
   ll "l -l"
   l1 "l -1"
   lh "l -H"
@@ -124,12 +137,10 @@ funs=(
   tf "tail -F"
 
   e "$EDITOR_ASYNC"
-  v "less"
   ee "e . &"
   c "cat"
   tm "tmux"
   tma "tmux a"
-  wl "wc -l"
   chux "chmod u+x"
   rd "rmdir"
   l "ls"
@@ -145,6 +156,11 @@ funs=(
   nb "jupyter notebook --ip=\* --port=8080"
   pi "pip install"
   pl "pip list"
+
+  # Haskell
+  sb "stack build"
+  sg "stack ghci"
+  se "stack exec"
 
   # Mac.
   oo "open ."
@@ -175,48 +191,31 @@ funs=(
   undo_last_commit "git reset HEAD~"
 
   # Configuration.
-  sshconfig "e ~/.ssh/config"
-  zc "e ~/.zshrc"
-  zpc "e ~/.zpreztorc"
-  zr "source ~/.zshrc"
+  sshconfig "e $HOME/.ssh/config"
+  zc "e $HOME/.zshrc"
+  zpc "e $HOME/.zpreztorc"
+  zr "source $HOME/.zshrc"
+)
+
+funs=(
+  \- "popd"
 
   # Utilities
-  which_programs_which_ports "netstat -tulpn"
-  resolve_url "nslookup"
-
   # Convert a date written as 'YYYY-MM-DD' to a UNIX epoch.
   # (The number of seconds since 1970-01-01).
   to_epoch "date -j -f %Y-%m-%d $1 +%s"
   # Convert in the other direction.
   from_epoch "date -r $1 +%Y-%m-%d"
+  which_programs_which_ports "netstat -tulpn"
+  resolve_url "nslookup"
 )
 
 env_vars=(
-  # Common paths
-  dl "$HOME/Downloads"
-  dt "$HOME/Desktop"
-  proj "$HOME/projects"
-  zp "$HOME/.zprezto"
-
   # When using PySpark shell, use ipython instead of python shell
   PYSPARK_DRIVER_PYTHON "ipython"
   # https://github.com/zsh-users/zsh-autosuggestions/#disabling-suggestion-for-large-buffers
   ZSH_AUTOSUGGEST_BUFFER_MAX_SIZE "20"
-
-  # Identity.
-  mn "Elliot Marsden"
-  me "elliot.marsden@gmail.com"
 )
-
-# I don't know whence this alias comes, but I don't want it, I want my function
-# version.
-unalias e
-
-# Unalias some things from the git plugin that clash with my customizations.
-# (Aliases take priority over functions when looking up commands.)
-unalias gs
-unalias gd
-unalias g
 
 if [[ -s "${ZDOTDIR:-$HOME}/.zshrc.local" ]]; then
   source "${ZDOTDIR:-$HOME}/.zshrc.local"
@@ -226,3 +225,10 @@ def_env_vars
 def_real_aliases
 def_global_aliases
 def_funs
+
+# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+
+if [ -e /Users/elliotmarsden/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/elliotmarsden/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
+
+# Hook to direnv
+eval "$(direnv hook zsh)"
