@@ -74,11 +74,6 @@ function mnt () {
     sshfs -o follow_symlinks,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 $1 $2
 }
 
-# HeX
-function hexpdf () {
-  stack exec hex -- $1 && dvipdf out.dvi && open out.pdf
-}
-
 global_aliases=(
   V "|& less"
   G "|& egrep --color"
@@ -161,10 +156,12 @@ real_aliases=(
   sb "stack build"
   sg "stack ghci"
   se "stack exec"
+  sr "stack exec"
 
-  # Mac.
-  oo "open ."
-  tr "trash"
+  # Yarn.
+  y "yarn"
+  yw "yarn watch"
+  sai "sudo apt install"
 
   enc "gpg --encrypt --recipient $me"
   dec "gpg --decrypt"
@@ -188,6 +185,7 @@ real_aliases=(
   grh "git reset HEAD"
   gfrp "gfr && gp"
   gclazy 'gc -m"Update"'
+  grm 'gr master'
   undo_last_commit "git reset HEAD~"
 
   # Configuration.
@@ -197,10 +195,17 @@ real_aliases=(
   zr "source $HOME/.zshrc"
 )
 
+if [[ $on_mac = 1 ]]; then
+  real_aliases+=(
+    oo "open ."
+    tr "trash"
+  )
+fi
+
 funs=(
   \- "popd"
 
-  # Utilities
+  # Utilities.
   # Convert a date written as 'YYYY-MM-DD' to a UNIX epoch.
   # (The number of seconds since 1970-01-01).
   to_epoch "date -j -f %Y-%m-%d $1 +%s"
@@ -226,9 +231,17 @@ def_real_aliases
 def_global_aliases
 def_funs
 
-# test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+# NVM.
+export NVM_DIR="$HOME/.nvm"
+# Load NVM.
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+# Load NVM bash completion.
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
 
-if [ -e /Users/elliotmarsden/.nix-profile/etc/profile.d/nix.sh ]; then . /Users/elliotmarsden/.nix-profile/etc/profile.d/nix.sh; fi # added by Nix installer
-
-# Hook to direnv
+# Nix.
+NIX_SH_PATH=$HOME/.nix-profile/etc/profile.d/nix.sh
+if [ -e $NIX_SH_PATH ]; then
+  source $NIX_SH_PATH
+fi
+# Hook to direnv.
 eval "$(direnv hook zsh)"
