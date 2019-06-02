@@ -74,6 +74,10 @@ function mnt () {
     sshfs -o follow_symlinks,reconnect,ServerAliveInterval=15,ServerAliveCountMax=3 $1 $2
 }
 
+function ghcl () {
+    gcl https://github.com/$1/$2.git
+}
+
 global_aliases=(
   V "|& less"
   G "|& egrep --color"
@@ -245,3 +249,28 @@ if [ -e $NIX_SH_PATH ]; then
 fi
 # Hook to direnv.
 eval "$(direnv hook zsh)"
+
+alias lx='exa -1 --group-directories-first'
+
+prevstr='if [[ $(file --mime {}) =~ inode/directory ]]; then
+    echo "# {} is a directory\n"
+    exa -1 --color=always --group-directories-first {} || ls {} 2> /dev/null | head -200
+elif [[ $(file --mime {}) =~ binary ]]; then
+    echo {} is a binary file
+else
+    bat --style=numbers --color=always {} || cat {} 2> /dev/null | head -200
+fi'
+
+export FZF_DEFAULT_OPTS="--inline-info --preview '$prevstr'"
+export FZF_DEFAULT_COMMAND='fd'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+function fzfe() {
+    fzf --bind 'enter:execute($EDITOR_ASYNC {})'
+}
+
+function fzfh() {
+    FZF_DEFAULT_COMMAND='fd -H' fzfe
+}
